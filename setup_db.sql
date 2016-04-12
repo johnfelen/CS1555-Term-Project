@@ -45,7 +45,6 @@ CREATE TABLE user_group (
 	group_profile varchar2(32),
 	email_profile varchar2(32),
 	CONSTRAINT user_fk FOREIGN KEY(email_profile) REFERENCES user_profile(email)
-	
 );
 
 commit; 
