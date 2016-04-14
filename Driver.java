@@ -1,13 +1,23 @@
 import java.io.*;
 import java.util.*;
+import java.text.*;
+import java.sql.*;
+import oracle.jdbc.*;
 
 public class Driver
 {
-    Scanner input;
-    public Driver()
+    private Scanner input;
+    private Connection connection;
+    private Statement statement;
+    private ResultSet resultSet;
+    private PreparedStatement prepStatement;
+    private String query;
+
+    public Driver( Connection connection )
     {
         System.out.println( "Welcome to the CS 1555 Term Project\nBrought to you by John Felen and Elie Perelman" );
         input = new Scanner( System.in );
+        this.connection = connection;
     }
 
     public void run()
@@ -50,7 +60,38 @@ public class Driver
                     break;
 
                 case 1:
-                    createUser();
+                    try
+                    {
+                        System.out.println( "Enter the user's name: " );
+                        String name = input.nextLine();
+                        System.out.println( "Enter the user's email: " );
+                        String email = input.nextLine();
+
+                        StringBuilder dob = new StringBuilder();
+                        System.out.println( "Enter the user's date of birth year:" );
+                        dob.append( input.nextLine() );
+                        dob.append( "-" );
+                        System.out.println( "Enter the user's date of birth month( number ): " );
+                        dob.append( input.nextLine() );
+                        dob.append( "-" );
+                        System.out.println( "Enter the user's date of birth day( number ): " );
+                        dob.append( input.nextLine() );
+
+                        if( createUser( name, email, dob.toString() ) )
+                        {
+                            System.out.println( name + " added to FaceSpace.\n" );
+                        }
+
+                        else
+                        {
+                            System.out.println( "Error in adding " + name + " to FaceSpace.\n" );
+                        }
+                    }
+
+                    catch( Exception e )
+                    {
+                        System.out.println( "Error " + e.toString() );
+                    }
                     break;
 
                 case 2:
@@ -103,9 +144,35 @@ public class Driver
         }
     }
 
-    public boolean createUser()
+    public boolean createUser( String name, String email, String dob )  throws SQLException
     {
-        return false;
+        try
+        {
+            query = "INSERT INTO user_profile " +
+                            "VALUES( ?, ?, ?, NULL )";
+
+            prepStatement = connection.prepareStatement( query );
+            SimpleDateFormat df = new SimpleDateFormat( "yyyy-MM-dd" );
+            java.sql.Date date_reg = new java.sql.Date( df.parse( dob ).getTime() );
+
+            prepStatement.setString( 1, name );
+            prepStatement.setString( 2, name );
+            prepStatement.setDate( 3, date_reg );
+
+            return prepStatement.executeUpdate() > 0;   //0 is failure
+        }
+
+        catch( SQLException e )
+        {
+            System.out.println( "Error: " + e.toString() );
+            return false;
+        }
+
+        catch( ParseException e )
+        {
+            System.out.println( "Error: " + e.toString() );
+            return false;
+        }
     }
 
     public boolean initiateFriendship()
@@ -165,8 +232,21 @@ public class Driver
 
     public static void main( String args[] )
     {
-        Driver driver = new Driver();
-        driver.run();
+        Connection connection;
+        try
+        {
+            DriverManager.registerDriver( new oracle.jdbc.driver.OracleDriver() );
+            String url = "jdbc:oracle:thin:@class3.cs.pitt.edu:1521:dbclass";
+            connection = DriverManager.getConnection( url, "jtf28", "3842858" );
+            Driver driver = new Driver( connection );
+            driver.run();
+        }
+
+        catch( Exception e )
+        {
+            System.out.println( "Error connecting to database" );
+            System.exit( 0 );
+        }
     }
 
 }
