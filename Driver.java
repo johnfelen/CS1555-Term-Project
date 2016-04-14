@@ -177,7 +177,97 @@ public class Driver
 
     public boolean initiateFriendship()
     {
-        return false;
+        
+        try
+		{
+			boolean validEmail = true; 
+			statement = connection.createStatement(); //create an instance 
+			// PROMPT THE USER FOR THEIR EMAIL ADDRESS
+			System.out.println("Enter your email address"); 
+			Scanner scan = new Scanner(System.in);	
+			String senderEmail = scan.nextLine().trim();
+			
+			// CONSTRUCT THE QUERY TO DETERMINE IF THE SENDER EMAIL IS CONTAINED IN THE DATABASE
+	   		String validataSenderQuery = "SELECT * FROM user_profile "; 
+	   		validataSenderQuery+= "WHERE email = '" + senderEmail + "' ";
+	   		
+			// OBTAIN THE QUERY SET
+	   		resultSet = statement.executeQuery(validataSenderQuery); //run the query on the DB table	   		
+	   		// We will issue a query to determine if a record exists
+	   		if(resultSet.next())
+	   		{
+	   				
+	   		}
+	   		else{
+	   			System.out.println("Invalid Sender email, there is no such email in the database");
+	   			validEmail = false;
+	   		}
+	   		
+	   		statement = connection.createStatement(); //create an instance 
+	   		// PROMPT THE USER FOR RECIPIENT EMAIL
+	   		System.out.println("Enter the email that you would like to become a friend with");
+	   		String recipientEmail = scan.nextLine().trim();
+	   		
+	   		// CONSTRUCT THE QUERY TO DETERMINE IF THE RECIPIENT EMAIL IS CONTAINED IN THE DATABASE	
+			String validateRecipientQuery = "SELECT * FROM user_profile "; 
+	   		validateRecipientQuery+= "WHERE email = '" + recipientEmail + "' ";	
+	   		
+	   		// OBTAIN THE QUERY SET
+	   		resultSet = statement.executeQuery(validateRecipientQuery); //run the query on the DB table	   		
+	   		// We will issue a query to determine if a record exists
+	   		if(resultSet.next())
+	   		{
+	   			
+	   		}
+	   		else{
+	   			System.out.println("Invalid Recipient email, there is no such email in the database");
+	   			validEmail = false;
+	   		}
+	   		
+	   		// ONLY ISSUE THE INSERT IF BOTH EMAILS EXIST
+	   		if(validEmail)
+	   		{
+	   			 String query = "INSERT INTO friendship " +
+                            "VALUES( ?, ?, ?, NULL )";
+
+           		 try
+           		 {	
+           		 	prepStatement = connection.prepareStatement(query);
+            		prepStatement.setString(1,senderEmail);
+           		 	prepStatement.setString(2,recipientEmail);
+            	 	prepStatement.setInt(3,0);
+            	 	
+            	 	if(prepStatement.executeUpdate() > 0)
+            	 	{
+            	 		System.out.println("Inserted successfully");
+            	 	}
+            	 }
+            	 catch(SQLException e)
+            	 {
+            	 	System.out.println( "Error: " + e.toString() );
+            	 }
+	   		}
+	   		
+	   			   					
+	    }
+		catch(SQLException Ex) 
+		{
+	    	System.out.println("Error running the sample queries.  Machine Error: " +
+			       Ex.toString());
+		} 
+		finally
+		{
+			try
+			{
+				if (statement != null) statement.close();
+				if (prepStatement != null) prepStatement.close();
+			} catch (SQLException e) {
+			System.out.println("Cannot close Statement. Machine error: "+e.toString());
+			}
+		}
+		
+        return true;
+        
     }
 
     public boolean establishFriendship()
