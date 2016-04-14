@@ -156,7 +156,7 @@ public class Driver
             java.sql.Date date_reg = new java.sql.Date( df.parse( dob ).getTime() );
 
             prepStatement.setString( 1, name );
-            prepStatement.setString( 2, name );
+            prepStatement.setString( 2, email );
             prepStatement.setDate( 3, date_reg );
 
             return prepStatement.executeUpdate() > 0;   //0 is failure
@@ -272,6 +272,74 @@ public class Driver
 
     public boolean establishFriendship()
     {
+        
+    	Scanner scan = new Scanner(System.in);
+    	
+    	System.out.println("Enter your email address that you would to accept the friend request from");
+		String senderEmail = scan.nextLine().trim();
+		System.out.println("Enter you email address");
+		String recipientEmail = scan.nextLine().trim();
+		
+		
+		// CREATE THE QUERY STRING TO BE SENT TO THE DATABASE
+			
+		String query = String.format("SELECT * FROM friendship WHERE sender_email = '%s' AND accepter_email = '%s'",senderEmail,recipientEmail);
+				
+		try
+		{
+			statement = connection.createStatement(); //create an instance 	
+			resultSet = statement.executeQuery(query); //run the query on the DB table
+			
+						
+			// You have found a friendship 
+			if(resultSet.next()){
+				
+				// Determine if the value is 0
+				int status = resultSet.getInt(3);
+				
+				// if the status == 1 then you dont need to store it again 
+				if(status == 0){
+					
+					System.out.println("Establishing the Friendship...");	
+					// Use the string format first 			
+					query = String.format("UPDATE friendship SET status=1,date_established=? WHERE sender_email='%s' AND accepter_email='%s'",senderEmail,recipientEmail);
+					
+					prepStatement = connection.prepareStatement(query);
+				
+					// Get current date
+					//SimpleDateFormat df = new SimpleDateFormat( "yyyy-MM-dd" );
+					java.util.Date currentTime =  new java.util.Date();
+					
+            		java.sql.Date date_reg = new java.sql.Date( currentTime.getTime() );
+					// Set the query paramter 
+    				prepStatement.setDate(1,date_reg);
+				
+					if(prepStatement.executeUpdate() > 0)   //0 is failure
+					{
+						System.out.println("Established Successfully");
+					}
+					
+				}
+				
+				
+			}		   					
+
+		}		
+		catch(SQLException Ex) 
+		{
+	    	System.out.println("Error running the sample queries.  Machine Error: " +
+			       Ex.toString());
+		} 
+		finally
+		{
+			try
+			{
+				if (statement != null) statement.close();
+				if (prepStatement != null) prepStatement.close();
+			} catch (SQLException e) {
+			System.out.println("Cannot close Statement. Machine error: "+e.toString());
+			}
+		}
         return false;
     }
 
@@ -327,7 +395,7 @@ public class Driver
         {
             DriverManager.registerDriver( new oracle.jdbc.driver.OracleDriver() );
             String url = "jdbc:oracle:thin:@class3.cs.pitt.edu:1521:dbclass";
-            connection = DriverManager.getConnection( url, "jtf28", "3842858" );
+            connection = DriverManager.getConnection( url, "ejp37", "4007533" );
             Driver driver = new Driver( connection );
             driver.run();
         }
