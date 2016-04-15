@@ -20,6 +20,75 @@ public class Driver
         this.connection = connection;
     }
 
+    public void setUp() throws Exception
+    {
+        ArrayList<String> names = generateRandomUsers();
+        ArrayList<String> emails = getRandomEmails();
+        PrintWriter pw = new PrintWriter( "dummy-data.sql" );
+        for( int i = 0; i < names.size(); i++ )
+        {
+            pw.println( "INSERT INTO user_profile VALUES( \'" + names.get( i ) + "\', \'" + emails.get( i ) + "\', " + "TIMESTAMP \'1999-10-31 07:16:59\', " + "NULL );" );
+        }
+
+        pw.close();
+    }
+
+    private ArrayList<String> generateRandomUsers() throws Exception
+    {
+        BufferedReader firstBF = new BufferedReader( new FileReader( "first-names.txt" ) );
+        ArrayList<String> firstNames = new ArrayList<String>();
+        while( firstBF.ready() )
+        {
+            firstNames.add( firstBF.readLine() + " " ); //add space for between first and last names
+        }
+
+        BufferedReader lastBF = new BufferedReader( new FileReader( "last-names.txt" ) );
+        ArrayList<String> lastNames = new ArrayList<String>();
+        while( lastBF.ready() )
+        {
+            lastNames.add( lastBF.readLine() );
+        }
+
+        ArrayList<String> users = new ArrayList<String>( 100 );
+        Random numberGen = new Random();
+        for( int i = 0; i < 100; i++ )
+        {
+            String curr = firstNames.get( numberGen.nextInt( firstNames.size() ) );
+            curr += lastNames.get( numberGen.nextInt( lastNames.size() ) );
+
+            if( curr.length() <= 32 )
+            {
+                users.add( curr );
+            }
+
+            else
+            {
+                i--;
+            }
+        }
+
+        return users;
+    }
+
+    private ArrayList<String> getRandomEmails() throws Exception
+    {
+        BufferedReader emailFile = new BufferedReader( new FileReader( "emails.txt" ) );
+        ArrayList<String> emails = new ArrayList<String>();
+        while( emailFile.ready() )
+        {
+            emails.add( emailFile.readLine() );
+        }
+
+        ArrayList<String> result = new ArrayList<String>( 100 );
+        Random numberGen = new Random();
+        for( int i = 0; i < 100; i++ )
+        {
+            result.add( emails.get( numberGen.nextInt( emails.size() ) ) );
+        }
+
+        return result;
+    }
+
     public void run()
     {
         boolean keepPrintingMenu = true;
@@ -177,53 +246,53 @@ public class Driver
 
     public boolean initiateFriendship()
     {
-        
+
         try
 		{
-			boolean validEmail = true; 
-			statement = connection.createStatement(); //create an instance 
+			boolean validEmail = true;
+			statement = connection.createStatement(); //create an instance
 			// PROMPT THE USER FOR THEIR EMAIL ADDRESS
-			System.out.println("Enter your email address"); 
-			Scanner scan = new Scanner(System.in);	
+			System.out.println("Enter your email address");
+			Scanner scan = new Scanner(System.in);
 			String senderEmail = scan.nextLine().trim();
-			
+
 			// CONSTRUCT THE QUERY TO DETERMINE IF THE SENDER EMAIL IS CONTAINED IN THE DATABASE
-	   		String validataSenderQuery = "SELECT * FROM user_profile "; 
+	   		String validataSenderQuery = "SELECT * FROM user_profile ";
 	   		validataSenderQuery+= "WHERE email = '" + senderEmail + "' ";
-	   		
+
 			// OBTAIN THE QUERY SET
-	   		resultSet = statement.executeQuery(validataSenderQuery); //run the query on the DB table	   		
+	   		resultSet = statement.executeQuery(validataSenderQuery); //run the query on the DB table
 	   		// We will issue a query to determine if a record exists
 	   		if(resultSet.next())
 	   		{
-	   				
+
 	   		}
 	   		else{
 	   			System.out.println("Invalid Sender email, there is no such email in the database");
 	   			validEmail = false;
 	   		}
-	   		
-	   		statement = connection.createStatement(); //create an instance 
+
+	   		statement = connection.createStatement(); //create an instance
 	   		// PROMPT THE USER FOR RECIPIENT EMAIL
 	   		System.out.println("Enter the email that you would like to become a friend with");
 	   		String recipientEmail = scan.nextLine().trim();
-	   		
-	   		// CONSTRUCT THE QUERY TO DETERMINE IF THE RECIPIENT EMAIL IS CONTAINED IN THE DATABASE	
-			String validateRecipientQuery = "SELECT * FROM user_profile "; 
-	   		validateRecipientQuery+= "WHERE email = '" + recipientEmail + "' ";	
-	   		
+
+	   		// CONSTRUCT THE QUERY TO DETERMINE IF THE RECIPIENT EMAIL IS CONTAINED IN THE DATABASE
+			String validateRecipientQuery = "SELECT * FROM user_profile ";
+	   		validateRecipientQuery+= "WHERE email = '" + recipientEmail + "' ";
+
 	   		// OBTAIN THE QUERY SET
-	   		resultSet = statement.executeQuery(validateRecipientQuery); //run the query on the DB table	   		
+	   		resultSet = statement.executeQuery(validateRecipientQuery); //run the query on the DB table
 	   		// We will issue a query to determine if a record exists
 	   		if(resultSet.next())
 	   		{
-	   			
+
 	   		}
 	   		else{
 	   			System.out.println("Invalid Recipient email, there is no such email in the database");
 	   			validEmail = false;
 	   		}
-	   		
+
 	   		// ONLY ISSUE THE INSERT IF BOTH EMAILS EXIST
 	   		if(validEmail)
 	   		{
@@ -231,12 +300,12 @@ public class Driver
                             "VALUES( ?, ?, ?, NULL )";
 
            		 try
-           		 {	
+           		 {
            		 	prepStatement = connection.prepareStatement(query);
             		prepStatement.setString(1,senderEmail);
            		 	prepStatement.setString(2,recipientEmail);
             	 	prepStatement.setInt(3,0);
-            	 	
+
             	 	if(prepStatement.executeUpdate() > 0)
             	 	{
             	 		System.out.println("Inserted successfully");
@@ -247,14 +316,14 @@ public class Driver
             	 	System.out.println( "Error: " + e.toString() );
             	 }
 	   		}
-	   		
-	   			   					
+
+
 	    }
-		catch(SQLException Ex) 
+		catch(SQLException Ex)
 		{
 	    	System.out.println("Error running the sample queries.  Machine Error: " +
 			       Ex.toString());
-		} 
+		}
 		finally
 		{
 			try
@@ -265,71 +334,71 @@ public class Driver
 			System.out.println("Cannot close Statement. Machine error: "+e.toString());
 			}
 		}
-		
+
         return true;
-        
+
     }
 
     public boolean establishFriendship()
     {
-        
+
     	Scanner scan = new Scanner(System.in);
-    	
+
     	System.out.println("Enter your email address that you would to accept the friend request from");
 		String senderEmail = scan.nextLine().trim();
 		System.out.println("Enter you email address");
 		String recipientEmail = scan.nextLine().trim();
-		
-		
+
+
 		// CREATE THE QUERY STRING TO BE SENT TO THE DATABASE
-			
+
 		String query = String.format("SELECT * FROM friendship WHERE sender_email = '%s' AND accepter_email = '%s'",senderEmail,recipientEmail);
-				
+
 		try
 		{
-			statement = connection.createStatement(); //create an instance 	
+			statement = connection.createStatement(); //create an instance
 			resultSet = statement.executeQuery(query); //run the query on the DB table
-			
-						
-			// You have found a friendship 
+
+
+			// You have found a friendship
 			if(resultSet.next()){
-				
+
 				// Determine if the value is 0
 				int status = resultSet.getInt(3);
-				
-				// if the status == 1 then you dont need to store it again 
+
+				// if the status == 1 then you dont need to store it again
 				if(status == 0){
-					
-					System.out.println("Establishing the Friendship...");	
-					// Use the string format first 			
+
+					System.out.println("Establishing the Friendship...");
+					// Use the string format first
 					query = String.format("UPDATE friendship SET status=1,date_established=? WHERE sender_email='%s' AND accepter_email='%s'",senderEmail,recipientEmail);
-					
+
 					prepStatement = connection.prepareStatement(query);
-				
+
 					// Get current date
 					//SimpleDateFormat df = new SimpleDateFormat( "yyyy-MM-dd" );
 					java.util.Date currentTime =  new java.util.Date();
-					
+
             		java.sql.Date date_reg = new java.sql.Date( currentTime.getTime() );
-					// Set the query paramter 
+					// Set the query paramter
     				prepStatement.setDate(1,date_reg);
-				
+
 					if(prepStatement.executeUpdate() > 0)   //0 is failure
 					{
 						System.out.println("Established Successfully");
 					}
-					
-				}
-				
-				
-			}		   					
 
-		}		
-		catch(SQLException Ex) 
+				}
+
+
+			}
+
+		}
+		catch(SQLException Ex)
 		{
 	    	System.out.println("Error running the sample queries.  Machine Error: " +
 			       Ex.toString());
-		} 
+		}
 		finally
 		{
 			try
@@ -388,15 +457,17 @@ public class Driver
         return false;
     }
 
-    public static void main( String args[] )
+    public static void main( String args[] )    throws Exception
     {
         Connection connection;
         try
         {
             DriverManager.registerDriver( new oracle.jdbc.driver.OracleDriver() );
             String url = "jdbc:oracle:thin:@class3.cs.pitt.edu:1521:dbclass";
-            connection = DriverManager.getConnection( url, "ejp37", "4007533" );
+            //connection = DriverManager.getConnection( url, "ejp37", "4007533" );
+            connection = DriverManager.getConnection( url, "jtf28", "3842858" );
             Driver driver = new Driver( connection );
+            driver.setUp();
             driver.run();
         }
 
