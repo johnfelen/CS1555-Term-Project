@@ -20,75 +20,6 @@ public class Driver
         this.connection = connection;
     }
 
-    public void setUp() throws Exception
-    {
-        ArrayList<String> names = generateRandomUsers();
-        ArrayList<String> emails = getRandomEmails();
-        PrintWriter pw = new PrintWriter( "dummy-data.sql" );
-        for( int i = 0; i < names.size(); i++ )
-        {
-            pw.println( "INSERT INTO user_profile VALUES( \'" + names.get( i ) + "\', \'" + emails.get( i ) + "\', " + "TIMESTAMP \'1999-10-31 07:16:59\', " + "NULL );" );
-        }
-
-        pw.close();
-    }
-
-    private ArrayList<String> generateRandomUsers() throws Exception
-    {
-        BufferedReader firstBF = new BufferedReader( new FileReader( "first-names.txt" ) );
-        ArrayList<String> firstNames = new ArrayList<String>();
-        while( firstBF.ready() )
-        {
-            firstNames.add( firstBF.readLine() + " " ); //add space for between first and last names
-        }
-
-        BufferedReader lastBF = new BufferedReader( new FileReader( "last-names.txt" ) );
-        ArrayList<String> lastNames = new ArrayList<String>();
-        while( lastBF.ready() )
-        {
-            lastNames.add( lastBF.readLine() );
-        }
-
-        ArrayList<String> users = new ArrayList<String>( 100 );
-        Random numberGen = new Random();
-        for( int i = 0; i < 100; i++ )
-        {
-            String curr = firstNames.get( numberGen.nextInt( firstNames.size() ) );
-            curr += lastNames.get( numberGen.nextInt( lastNames.size() ) );
-
-            if( curr.length() <= 32 )
-            {
-                users.add( curr );
-            }
-
-            else
-            {
-                i--;
-            }
-        }
-
-        return users;
-    }
-
-    private ArrayList<String> getRandomEmails() throws Exception
-    {
-        BufferedReader emailFile = new BufferedReader( new FileReader( "emails.txt" ) );
-        ArrayList<String> emails = new ArrayList<String>();
-        while( emailFile.ready() )
-        {
-            emails.add( emailFile.readLine() );
-        }
-
-        ArrayList<String> result = new ArrayList<String>( 100 );
-        Random numberGen = new Random();
-        for( int i = 0; i < 100; i++ )
-        {
-            result.add( emails.get( numberGen.nextInt( emails.size() ) ) );
-        }
-
-        return result;
-    }
-
     public void run()
     {
         boolean keepPrintingMenu = true;
@@ -457,7 +388,7 @@ public class Driver
         return false;
     }
 
-    public static void main( String args[] )    throws Exception
+    public static void main( String args[] )
     {
         Connection connection;
         try
@@ -467,7 +398,6 @@ public class Driver
             //connection = DriverManager.getConnection( url, "ejp37", "4007533" );
             connection = DriverManager.getConnection( url, "jtf28", "3842858" );
             Driver driver = new Driver( connection );
-            driver.setUp();
             driver.run();
         }
 
