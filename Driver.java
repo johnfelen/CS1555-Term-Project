@@ -345,7 +345,75 @@ public class Driver
 
     public boolean displayFriends()
     {
-        return false;
+        System.out.println( "Enter the user's email: " );
+        String email = input.nextLine();
+
+        try
+        {
+            query = "SELECT sender_email, accepter_email, status " +
+                    "FROM friendship " +
+                    "WHERE sender_email = ? OR accepter_email = ? " +
+                    "ORDER BY status";
+
+
+            prepStatement = connection.prepareStatement( query );
+            prepStatement.setString( 1, email );
+            prepStatement.setString( 2, email );
+            resultSet = prepStatement.executeQuery();
+
+            boolean pendingFriendshipPrinted = false;
+            boolean establishedFriendshipPrinted = false;
+            while( resultSet.next() )
+            {
+                if( !pendingFriendshipPrinted && resultSet.getInt( 3 ) == 0 )
+                {
+                    pendingFriendshipPrinted = true;
+                    System.out.println( "Pending Friendships:" );
+                }
+
+                else if( !establishedFriendshipPrinted && resultSet.getInt( 3 ) == 1 )
+                {
+                    establishedFriendshipPrinted = true;
+                    System.out.println( "Established Friendships:" );
+                }
+
+                //the opposite is not the email entered so print out their friendship
+                if( resultSet.getString( 2 ).equals( email ) )
+                {
+                    System.out.println( resultSet.getString( 1 ) );
+                }
+
+                else
+                {
+                    System.out.println( resultSet.getString( 2 ) );
+                }
+            }
+
+            System.out.println();
+        }
+
+        catch(SQLException Ex)
+        {
+            System.out.println("Error running the sample queries.  Machine Error: " + Ex.toString());
+            return false;
+        }
+
+        finally
+        {
+            try
+            {
+                if (statement != null) statement.close();
+                if (prepStatement != null) prepStatement.close();
+            }
+
+            catch (SQLException e)
+            {
+                System.out.println("Cannot close Statement. Machine error: "+e.toString());
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public boolean createGroup()
