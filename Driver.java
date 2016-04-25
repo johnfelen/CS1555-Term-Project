@@ -433,7 +433,55 @@ public class Driver
 
     public boolean displayMessages()
     {
-        return false;
+        System.out.println( "Enter the user's email: " );
+        String email = input.nextLine();
+
+        try
+        {
+            query = "SELECT sender_email, subject, text_body, date_sent " +
+                    "FROM message " +
+                    "WHERE sender_email = ? " +
+                    "ORDER BY date_sent";
+
+            prepStatement = connection.prepareStatement( query );
+            prepStatement.setString( 1, email );
+            resultSet = prepStatement.executeQuery();
+
+            while( resultSet.next() )
+            {
+                String senderEmail = resultSet.getString( 1 );
+                String subject = resultSet.getString( 2 );
+                String body = resultSet.getString( 3 );
+                java.sql.Date dateSent = resultSet.getDate( 4 );
+
+                System.out.println( subject + " from " + senderEmail + " on " + dateSent.toString() + ":\n" + body );
+            }
+
+            System.out.println();
+        }
+
+        catch(SQLException Ex)
+        {
+            System.out.println("Error running the sample queries.  Machine Error: " + Ex.toString());
+            return false;
+        }
+
+        finally
+        {
+            try
+            {
+                if (statement != null) statement.close();
+                if (prepStatement != null) prepStatement.close();
+            }
+
+            catch (SQLException e)
+            {
+                System.out.println("Cannot close Statement. Machine error: "+e.toString());
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public boolean searchForUser()
