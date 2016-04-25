@@ -428,8 +428,56 @@ public class Driver
 
     public boolean sendMessageToUser()
     {
-        return false;
+        System.out.println( "Enter the sender's email: " );
+        String senderEmail = input.nextLine();
+        System.out.println( "Enter the recipient's email: " );
+        String recipientEmail = input.nextLine();
+        System.out.println( "Enter the subject of the message: " );
+        String subject = input.nextLine();
+        System.out.println( "Enter the message: " );
+        String body = input.nextLine();
+
+        try
+        {
+            query = "INSERT INTO message VALUES( ?, ?, ?, ?, ? )";
+    	    prepStatement = connection.prepareStatement( query );
+
+    	    prepStatement.setString( 1, senderEmail );
+            prepStatement.setString( 2, recipientEmail );
+            prepStatement.setString( 3, subject );
+            prepStatement.setString( 4, body );
+
+            //get current date the message was created on
+            prepStatement.setTimestamp( 5, new Timestamp( System.currentTimeMillis() ) );
+
+    	    prepStatement.executeUpdate();
+        }
+
+        catch( SQLException Ex )
+        {
+            System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
+            return false;
+        }
+
+        finally
+        {
+            try
+            {
+                if ( statement != null ) statement.close();
+                if ( prepStatement != null ) prepStatement.close();
+            }
+
+            catch ( SQLException e )
+            {
+                System.out.println( "Cannot close Statement. Machine error: "+e.toString() );
+                return false;
+            }
+        }
+
+        return true;
     }
+
+//INSERT INTO message VALUES( 'wandacrawford27@gmail.com', 'ranitaverde999@hotmail.com', 'Merry Christmas', 'Merry Christmas 2014', TIMESTAMP '2014-12-25 09:30:30' );
 
     public boolean displayMessages()
     {
@@ -460,9 +508,9 @@ public class Driver
             System.out.println();
         }
 
-        catch(SQLException Ex)
+        catch( SQLException Ex )
         {
-            System.out.println("Error running the sample queries.  Machine Error: " + Ex.toString());
+            System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
             return false;
         }
 
@@ -470,13 +518,13 @@ public class Driver
         {
             try
             {
-                if (statement != null) statement.close();
-                if (prepStatement != null) prepStatement.close();
+                if ( statement != null ) statement.close();
+                if ( prepStatement != null ) prepStatement.close();
             }
 
-            catch (SQLException e)
+            catch ( SQLException e )
             {
-                System.out.println("Cannot close Statement. Machine error: "+e.toString());
+                System.out.println( "Cannot close Statement. Machine error: "+e.toString() );
                 return false;
             }
         }
