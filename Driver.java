@@ -418,11 +418,159 @@ public class Driver
 
     public boolean createGroup()
     {
-        return false;
+        
+        // Prompt for a name, description, and membership limit
+        String groupName, descripton;
+        int membershipLimit;
+        Scanner scan = new Scanner(System.in);
+        System.out.println("Enter the the name of the group to create"); 
+        groupName = scan.nextLine().trim();
+        System.out.println("Enter descripton for the group");
+        descripton = scan.nextLine().trim();
+        System.out.println("Enter the number of members allowed in this group (membership limit)"); 
+
+        if(scan.hasNextInt())
+        {
+            membershipLimit = scan.nextInt();
+        }else{
+            membershipLimit = 50; // If the user enters a non numberical value set to 50
+        }
+
+        // CREATE THE NEW GROUP 
+
+        try{
+
+            query = "INSERT INTO group_profile VALUES(?,?,?)";
+
+            prepStatement = connection.prepareStatement(query);
+
+            prepStatement.setString(1, groupName);
+            prepStatement.setString(2, descripton);
+            prepStatement.setInt(3, membershipLimit);
+       
+            prepStatement.executeUpdate();
+        }
+
+        catch( SQLException Ex )
+        {
+            System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
+            return false;
+        } 
+        finally
+        {
+            try
+            {
+                if ( statement != null ) statement.close();
+                if ( prepStatement != null ) prepStatement.close();
+            }
+
+            catch ( SQLException e )
+            {
+                System.out.println( "Cannot close Statement. Machine error: "+e.toString() );
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean addToGroup()
     {
+        
+        String groupName, userEmail;
+        Scanner scan = new Scanner(System.in);
+        System.out.println("Enter the name of the group that you would like to join");
+        groupName = scan.nextLine().trim(); 
+        System.out.println("Enter your email address");
+        userEmail = scan.nextLine().trim();
+
+
+        // OBTAIN THE current GROUP Total FROM THE DATABASE  - CREATE THE QUERY 
+        String query =  "SELECT COUNT(*), group_profile " + 
+                            "FROM user_group " + 
+                             "WHERE group_profile = '%s' "+ 
+                                "GROUP BY(group_profile)";
+
+        // Pass in the query with the updated value 
+        query = String.format(query,groupName);
+
+        try{
+
+            statement = connection.createStatement(); //create an instance
+            resultSet = statement.executeQuery(query); //run the query on the DB table
+
+            // check if there is a group name in the database
+            if(resultSet.next()){
+                // obtain the current amount of users in the current group 
+                int currentMemberTotal = resultSet.getInt(1);
+                // Close the last statement 
+                statement.close();
+
+                // Create the query string to obtain the membership total
+                query = "SELECT member_limit FROM group_profile WHERE gname = '%s' ";
+                query = String.format(query,groupName);
+
+                // Create query 
+                statement = connection.createStatement();
+                // Obtain the membership limit allowed in the current group
+    
+                resultSet = statement.executeQuery(query); //run the query on the DB table
+
+                if(resultSet.next()){
+
+                    int maxMembersTotal = resultSet.getInt(1);
+
+                    // CHECK IF YOU HAVE EXCEEDED THE TOTAL AMOUNT
+                    if(currentMemberTotal >= maxMembersTotal){
+                        System.out.println("You have reached the max total of users allowed in this group");
+
+                    }else{
+                        // Close the last statement 
+                        statement.close();
+                        // INSERT THE NEW GROUP
+                        query = "INSERT INTO user_group VALUES(?,?)";
+                        prepStatement = connection.prepareStatement(query);
+
+                        prepStatement.setString(1, groupName);
+                        prepStatement.setString(2, userEmail);
+
+                        prepStatement.executeUpdate();
+
+                        System.out.println("Added " + userEmail + " to group " + groupName );
+                    }
+
+                }else{
+                    System.out.println("Some internal error --- DEBUG");
+                }
+
+            }else{
+                System.out.println("There is no such group in the database");
+            }
+
+        } 
+        catch( SQLException Ex )
+        {
+            System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
+            return false;
+        }
+
+        finally
+        {
+            try
+            {
+                if ( statement != null ) statement.close();
+                if ( prepStatement != null ) prepStatement.close();
+            }
+
+            catch ( SQLException e )
+            {
+                System.out.println( "Cannot close Statement. Machine error: "+e.toString() );
+                return false;
+            }
+        }
+
+
+
+
         return false;
     }
 
@@ -452,7 +600,6 @@ public class Driver
 
     	    prepStatement.executeUpdate();
         }
-
         catch( SQLException Ex )
         {
             System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
@@ -560,7 +707,7 @@ public class Driver
             DriverManager.registerDriver( new oracle.jdbc.driver.OracleDriver() );
             String url = "jdbc:oracle:thin:@class3.cs.pitt.edu:1521:dbclass";
             //connection = DriverManager.getConnection( url, "ejp37", "4007533" );
-            connection = DriverManager.getConnection( url, "jtf28", "3842858" );
+            connection = DriverManager.getConnection( url, "ejp37", "4007533" );
             Driver driver = new Driver( connection );
             driver.run();
         }
