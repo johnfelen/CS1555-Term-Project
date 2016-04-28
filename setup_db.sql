@@ -38,7 +38,9 @@ CREATE TABLE friendship (
 	status number(1), 
 	date_established TIMESTAMP,
 	CONSTRAINT a_fk FOREIGN KEY (sender_email) REFERENCES user_profile(email),
-	CONSTRAINT b_fk FOREIGN KEY (accepter_email) REFERENCES user_profile(email)	
+	CONSTRAINT b_fk FOREIGN KEY (accepter_email) REFERENCES user_profile(email),
+	-- Just added - protect againt duplicate values
+	--CONSTRAINT ab_pm PRIMARY KEY(sender_email,accepter_email)
 );
 
 CREATE TABLE user_group (
@@ -48,5 +50,55 @@ CREATE TABLE user_group (
 );
 
 commit; 
+
+
+/*-- an after row level trigger */
+CREATE OR REPLACE TRIGGER another_trigger
+BEFORE DELETE ON user_profile
+FOR EACH ROW
+BEGIN
+        DELETE FROM friendship
+        WHERE friendship.sender_email = :old.email
+         OR friendship.accepter_email = :old.email;
+
+        DELETE FROM user_group
+        WHERE user_group.email_profile = :old.email;
+
+        DELETE FROM message
+        WHERE (message.sender_email = :old.email
+        OR message.recipient_email = :old.email)
+        AND (message.sender_email IS NULL OR message.recipient_email IS NULL);
+
+
+        UPDATE message
+        SET message.sender_email = NULL
+        WHERE message.sender_email = :old.email;
+
+        UPDATE message
+        SET message.recipient_email = NULL
+        WHERE message.recipient_email = :old.email;
+
+
+END;
+/
+commit;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	 
