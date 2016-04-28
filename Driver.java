@@ -683,11 +683,66 @@ public class Driver
 
     public boolean searchForUser()
     {
-        return false;
+        System.out.println( "Enter Search String( deliminate search options with , ): " );
+        String search = input.nextLine();
+        String[] searches = search.split( "," );
+        System.out.println();
+
+        try
+        {
+            for( String currSearch : searches )
+            {
+                currSearch = currSearch.trim();
+                query = "SELECT full_name, email " +
+                        "FROM user_profile " +
+                        "WHERE full_name = ? OR email = ? " +
+                        "ORDER BY full_name";
+
+                prepStatement = connection.prepareStatement( query );
+                prepStatement.setString( 1, currSearch );
+                prepStatement.setString( 2, currSearch );
+                resultSet = prepStatement.executeQuery();
+
+                while( resultSet.next() )
+                {
+                    String fullName = resultSet.getString( 1 );
+                    String email = resultSet.getString( 2 );
+
+                    System.out.println( fullName + " : " + email );
+                }
+            }
+
+            System.out.println();
+        }
+
+        catch( SQLException Ex )
+        {
+            System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
+            return false;
+        }
+
+        finally
+        {
+            try
+            {
+                if ( statement != null ) statement.close();
+                if ( prepStatement != null ) prepStatement.close();
+            }
+
+            catch ( SQLException e )
+            {
+                System.out.println( "Cannot close Statement. Machine error: "+e.toString() );
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public boolean threeDegrees()
     {
+
+
         return false;
     }
 
