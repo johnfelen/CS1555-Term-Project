@@ -131,7 +131,11 @@ public class Driver
                     break;
 
                 case 11:
-                    topMessagers();
+                    System.out.println( "Enter the number of users: " );
+                    int numUsers = Integer.parseInt( input.nextLine() );
+                    System.out.println( "Ener the number of months: " );
+                    int numMonths = Integer.parseInt( input.nextLine() );
+                    topMessagers( numUsers, numMonths );
                     break;
 
                 case 12:
@@ -418,16 +422,16 @@ public class Driver
 
     public boolean createGroup()
     {
-        
+
         // Prompt for a name, description, and membership limit
         String groupName, descripton;
         int membershipLimit;
         Scanner scan = new Scanner(System.in);
-        System.out.println("Enter the the name of the group to create"); 
+        System.out.println("Enter the the name of the group to create");
         groupName = scan.nextLine().trim();
         System.out.println("Enter descripton for the group");
         descripton = scan.nextLine().trim();
-        System.out.println("Enter the number of members allowed in this group (membership limit)"); 
+        System.out.println("Enter the number of members allowed in this group (membership limit)");
 
         if(scan.hasNextInt())
         {
@@ -436,7 +440,7 @@ public class Driver
             membershipLimit = 50; // If the user enters a non numberical value set to 50
         }
 
-        // CREATE THE NEW GROUP 
+        // CREATE THE NEW GROUP
 
         try{
 
@@ -447,7 +451,7 @@ public class Driver
             prepStatement.setString(1, groupName);
             prepStatement.setString(2, descripton);
             prepStatement.setInt(3, membershipLimit);
-       
+
             prepStatement.executeUpdate();
         }
 
@@ -455,7 +459,7 @@ public class Driver
         {
             System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
             return false;
-        } 
+        }
         finally
         {
             try
@@ -475,22 +479,22 @@ public class Driver
 
     public boolean addToGroup()
     {
-        
+
         String groupName, userEmail;
         Scanner scan = new Scanner(System.in);
         System.out.println("Enter the name of the group that you would like to join");
-        groupName = scan.nextLine().trim(); 
+        groupName = scan.nextLine().trim();
         System.out.println("Enter your email address");
         userEmail = scan.nextLine().trim();
 
 
-        // OBTAIN THE current GROUP Total FROM THE DATABASE  - CREATE THE QUERY 
-        String query =  "SELECT COUNT(*), group_profile " + 
-                            "FROM user_group " + 
-                             "WHERE group_profile = '%s' "+ 
+        // OBTAIN THE current GROUP Total FROM THE DATABASE  - CREATE THE QUERY
+        String query =  "SELECT COUNT(*), group_profile " +
+                            "FROM user_group " +
+                             "WHERE group_profile = '%s' "+
                                 "GROUP BY(group_profile)";
 
-        // Pass in the query with the updated value 
+        // Pass in the query with the updated value
         query = String.format(query,groupName);
 
         try{
@@ -500,19 +504,19 @@ public class Driver
 
             // check if there is a group name in the database
             if(resultSet.next()){
-                // obtain the current amount of users in the current group 
+                // obtain the current amount of users in the current group
                 int currentMemberTotal = resultSet.getInt(1);
-                // Close the last statement 
+                // Close the last statement
                 statement.close();
 
                 // Create the query string to obtain the membership total
                 query = "SELECT member_limit FROM group_profile WHERE gname = '%s' ";
                 query = String.format(query,groupName);
 
-                // Create query 
+                // Create query
                 statement = connection.createStatement();
                 // Obtain the membership limit allowed in the current group
-    
+
                 resultSet = statement.executeQuery(query); //run the query on the DB table
 
                 if(resultSet.next()){
@@ -524,7 +528,7 @@ public class Driver
                         System.out.println("You have reached the max total of users allowed in this group");
 
                     }else{
-                        // Close the last statement 
+                        // Close the last statement
                         statement.close();
                         // INSERT THE NEW GROUP
                         query = "INSERT INTO user_group VALUES(?,?)";
@@ -546,7 +550,7 @@ public class Driver
                 System.out.println("There is no such group in the database");
             }
 
-        } 
+        }
         catch( SQLException Ex )
         {
             System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
@@ -624,8 +628,6 @@ public class Driver
         return true;
     }
 
-//INSERT INTO message VALUES( 'wandacrawford27@gmail.com', 'ranitaverde999@hotmail.com', 'Merry Christmas', 'Merry Christmas 2014', TIMESTAMP '2014-12-25 09:30:30' );
-
     public boolean displayMessages()
     {
         System.out.println( "Enter the user's email: " );
@@ -681,17 +683,156 @@ public class Driver
 
     public boolean searchForUser()
     {
-        return false;
+        System.out.println( "Enter Search String( deliminate search options with , ): " );
+        String search = input.nextLine();
+        String[] searches = search.split( "," );
+        System.out.println();
+
+        try
+        {
+            for( String currSearch : searches )
+            {
+                currSearch = currSearch.trim();
+                query = "SELECT full_name, email " +
+                        "FROM user_profile " +
+                        "WHERE full_name = ? OR email = ? " +
+                        "ORDER BY full_name";
+
+                prepStatement = connection.prepareStatement( query );
+                prepStatement.setString( 1, currSearch );
+                prepStatement.setString( 2, currSearch );
+                resultSet = prepStatement.executeQuery();
+
+                while( resultSet.next() )
+                {
+                    String fullName = resultSet.getString( 1 );
+                    String email = resultSet.getString( 2 );
+
+                    System.out.println( fullName + " : " + email );
+                }
+            }
+
+            System.out.println();
+        }
+
+        catch( SQLException Ex )
+        {
+            System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
+            return false;
+        }
+
+        finally
+        {
+            try
+            {
+                if ( statement != null ) statement.close();
+                if ( prepStatement != null ) prepStatement.close();
+            }
+
+            catch ( SQLException e )
+            {
+                System.out.println( "Cannot close Statement. Machine error: "+e.toString() );
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public boolean threeDegrees()
     {
+
+
         return false;
     }
 
-    public boolean topMessagers()
+    private void updateMap( int numMonths, Map<String, Integer> emailsToMessages, boolean sender )    //updates map with the emails and the amount of messages based on sender and receiver
     {
-        return false;
+        try
+        {
+            String emailChoice = ( sender ) ? "sender_email" : "recipient_email";
+            query = "SELECT " + emailChoice + ", count(*) " +
+                    "FROM message " +
+                    "WHERE date_sent > TRUNC( ADD_MONTHS( SYSDATE, " + -1 * numMonths + " ) ) " +
+                    "GROUP BY " + emailChoice + " ";
+
+            prepStatement = connection.prepareStatement( query );
+            resultSet = prepStatement.executeQuery();
+
+            while( resultSet.next() )
+            {
+                String email = resultSet.getString( 1 );
+                int numMessages = resultSet.getInt( 2 );
+
+                if( emailsToMessages.containsKey( email ) )
+                {
+                    emailsToMessages.put( email, emailsToMessages.get( email ) + numMessages );
+                }
+
+                else
+                {
+                    emailsToMessages.put( email, numMessages );
+                }
+            }
+        }
+
+        catch( SQLException Ex )
+        {
+            System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
+        }
+
+        finally
+        {
+            try
+            {
+                if ( statement != null ) statement.close();
+                if ( prepStatement != null ) prepStatement.close();
+            }
+
+            catch ( SQLException e )
+            {
+                System.out.println( "Cannot close Statement. Machine error: "+e.toString() );
+            }
+        }
+    }
+
+    public boolean topMessagers( int numUsers, int numMonths )
+    {
+        Map<String, Integer> emailsToMessages = new HashMap<String, Integer>();
+        try
+        {
+            updateMap( numMonths, emailsToMessages, true );
+            updateMap( numMonths, emailsToMessages, false );
+
+            Iterator it = emailsToMessages.entrySet().iterator();
+            int count = 0;
+
+            while( it.hasNext() && count < numUsers )
+            {
+                Map.Entry pair = ( Map.Entry )it.next();
+                System.out.println( pair.getKey() + " sent/recieved " + pair.getValue() );
+                count++;
+            }
+
+
+            System.out.println();
+        }
+
+        finally
+        {
+            try
+            {
+                if ( statement != null ) statement.close();
+                if ( prepStatement != null ) prepStatement.close();
+            }
+
+            catch ( SQLException e )
+            {
+                System.out.println( "Cannot close Statement. Machine error: "+e.toString() );
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean dropUser()
@@ -715,7 +856,7 @@ public class Driver
             DriverManager.registerDriver( new oracle.jdbc.driver.OracleDriver() );
             String url = "jdbc:oracle:thin:@class3.cs.pitt.edu:1521:dbclass";
             //connection = DriverManager.getConnection( url, "ejp37", "4007533" );
-            connection = DriverManager.getConnection( url, "ejp37", "4007533" );
+            connection = DriverManager.getConnection( url, "jtf28", "3842858" );
             Driver driver = new Driver( connection );
             driver.run();
         }
