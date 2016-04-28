@@ -838,14 +838,41 @@ public class Driver
     public boolean dropUser()
     {
         
-        System.out.println("What is user's emails address to drop");
+        System.out.println("What is user emails address to drop");
         Scanner scan = new Scanner(System.in);
-        String email = scan.nextLine.trim();
+        String email = scan.nextLine().trim();
 
 
+        String query = "DELETE FROM user_profile WHERE email = '%s'";
+        query = String.format(query,email);
 
+        try
+        {
+            prepStatement = connection.prepareStatement(query);
+            prepStatement.executeUpdate();
+        }
+        catch( SQLException Ex )
+        {
+            System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
+            return false;
+        }
 
-        return false;
+        finally
+        {
+            try
+            {
+                if ( statement != null ) statement.close();
+                if ( prepStatement != null ) prepStatement.close();
+            }
+
+            catch ( SQLException e )
+            {
+                System.out.println( "Cannot close Statement. Machine error: "+e.toString() );
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static void main( String args[] )
@@ -855,8 +882,8 @@ public class Driver
         {
             DriverManager.registerDriver( new oracle.jdbc.driver.OracleDriver() );
             String url = "jdbc:oracle:thin:@class3.cs.pitt.edu:1521:dbclass";
-            //connection = DriverManager.getConnection( url, "ejp37", "4007533" );
-            connection = DriverManager.getConnection( url, "jtf28", "3842858" );
+            connection = DriverManager.getConnection( url, "ejp37", "4007533" );
+            //connection = DriverManager.getConnection( url, "jtf28", "3842858" );
             Driver driver = new Driver( connection );
             driver.run();
         }
