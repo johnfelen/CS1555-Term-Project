@@ -12,6 +12,7 @@ public class Driver
     private ResultSet resultSet;
     private PreparedStatement prepStatement;
     private String query;
+    private String globalPath = null;   //allows for easier recursion
 
     public Driver( Connection connection )
     {
@@ -322,6 +323,11 @@ public class Driver
 					{
 						System.out.println("Established Successfully");
 					}
+
+                    else
+                    {
+                        System.out.println( "Friendship Failure!!" );
+                    }
 
 				}
 
@@ -739,11 +745,117 @@ public class Driver
         return true;
     }
 
+    private void DFS( String currUser, String userB, String currPath, int hopCount )    //uses depth first search to get the the friends since it basically is a graph
+    {
+        if( globalPath != null )
+        {
+            return;
+        }
+
+        else if( hopCount > 3 )
+        {
+            return;
+        }
+
+        else if( currUser.equals( userB ) ) //found a path set global path to stop the rest of the searches
+        {
+            globalPath = currPath;
+            return;
+        }
+
+        try
+        {
+            String query = "SELECT sender_email, accepter_email " +
+                    "FROM friendship " +
+                    "WHERE status = 1 AND ( sender_email = ? OR accepter_email = ? ) ";
+
+            PreparedStatement prepStatement = connection.prepareStatement( query );
+            prepStatement.setString( 1, currUser );
+            prepStatement.setString( 2, currUser );
+            ResultSet resultSet = prepStatement.executeQuery();
+
+            while( resultSet.next() )   //recursive search part
+            {
+                String sender = resultSet.getString( 1 );
+                String accepter = resultSet.getString( 2 );
+
+                if( sender.equals( currUser ) )
+                {
+                    DFS( accepter, userB, currPath + "->" + accepter, hopCount + 1 );
+                }
+
+                else
+                {
+                    DFS( sender, userB, currPath + "->" + sender, hopCount + 1 );
+                }
+            }
+        }
+
+        catch( SQLException Ex )
+        {
+            System.out.println( "Error running the sample queries.  Machine Error: " + Ex.toString() );
+            return;
+        }
+
+        finally
+        {
+            try
+            {
+                if ( statement != null ) statement.close();
+                if ( prepStatement != null ) prepStatement.close();
+            }
+
+            catch ( SQLException e )
+            {
+                System.out.println( "Cannot close Statement. Machine error: "+e.toString() );
+                return;
+            }
+        }
+
+        return;
+    }
+
     public boolean threeDegrees()
     {
+        System.out.println( "Enter First User's Email: " );
+        String userA = input.nextLine();
+        System.out.println( "Enter Second User's Email: " );
+        String userB = input.nextLine();
 
+        try //info@bleacherreport.com->gulyaseva30@gmail.com->dsfashionhouse@gmail.com->namelastname@gmail.com is a 3 degree test path
+        {
+            globalPath = null;
+            DFS( userA, userB, userA, 0 );
 
-        return false;
+            if( globalPath != null )
+            {
+                System.out.println( globalPath );
+            }
+
+            else
+            {
+                System.out.println( "No Path Found" );
+            }
+
+            System.out.println();
+        }
+
+        finally
+        {
+            try
+            {
+                if ( statement != null ) statement.close();
+                if ( prepStatement != null ) prepStatement.close();
+            }
+
+            catch ( SQLException e )
+            {
+                System.out.println( "Cannot close Statement. Machine error: "+e.toString() );
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void updateMap( int numMonths, Map<String, Integer> emailsToMessages, boolean sender )    //updates map with the emails and the amount of messages based on sender and receiver
