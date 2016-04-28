@@ -696,6 +696,14 @@ public class Driver
 
     public boolean dropUser()
     {
+        
+        System.out.println("What is user's emails address to drop");
+        Scanner scan = new Scanner(System.in);
+        String email = scan.nextLine.trim();
+
+
+
+
         return false;
     }
 
